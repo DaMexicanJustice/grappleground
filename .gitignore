@@ -1,0 +1,41 @@
+# =============== #
+# Unity generated #
+# =============== #
+Grappling Hook 2D/[Tt]emp/
+Grappling Hook 2D/[Oo]bj/
+Grappling Hook 2D/[Bb]uilds/
+Grappling Hook 2D/[Ll]ibrary/
+Grappling Hook 2D/[Ll]ibrary_ANDROID/
+Grappling Hook 2D/[Ll]ibrary_PC/
+Grappling Hook 2D/[Ll]ibrary_IOS/
+Grappling Hook 2D/sysinfo.txt
+Grappling Hook 2D/UnityVS/
+Grappling Hook 2D/UnityVS.meta
+Grappling Hook 2D/LightingData*
+Grappling Hook 2D/ReflectionProbe*
+Grappling Hook 2D/Assets/Scenes/Personal Scenes*
+
+# ===================================== #
+# Visual Studio / MonoDevelop generated #
+# ===================================== #
+Grappling Hook 2D/[Ee]xported[Oo]bj/
+Grappling Hook 2D/*.userprefs
+Grappling Hook 2D/*.csproj
+Grappling Hook 2D/*.pidb
+Grappling Hook 2D/*.suo
+Grappling Hook 2D/*.sln*
+Grappling Hook 2D/*.user
+Grappling Hook 2D/*.unityproj
+Grappling Hook 2D/*.booproj
+
+# ============
+# OS generated
+# ============
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Thumbs.db.meta
