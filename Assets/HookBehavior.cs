@@ -9,7 +9,7 @@ public class HookBehavior : MonoBehaviour {
 	float speed = 1.0F;
 	float startTime;
 	float journeyLength;
-	bool isInitialized;
+	public bool isInitialized;
 
 	public void Init(Transform startPosition, Transform endPosition, int speed) {
 		startMarker = startPosition;

@@ -14,13 +14,16 @@ public class PlayerController : MonoBehaviour {
 	public int projectileSpeed;
 	public int jumpForce;
 	public int maxSpeed;
+	[Range(0.05f, 0.1f)]
+	public float climbSpeed;
+	public float distanceToSnap;
 
 	// private
 	Rigidbody2D rb2d;
 	LineRenderer lineRenderer;
 	List<GameObject> joints = new List<GameObject>();
 	bool isAttachedToRope = false;
-	bool isRopeFired;
+	bool isRopeFired = false;
 	bool isGrounded;
 	Transform hookObject;
 
@@ -39,10 +42,9 @@ public class PlayerController : MonoBehaviour {
 			rb2d.velocity = rb2d.velocity.normalized * maxSpeed;
 		}
 
-		// Jump/ Hook
+		// Jump / Hook
 		Aim();
 		if (Input.GetMouseButtonDown(0)) {
-			Debug.Log ("Mouse time");
 			if (!isRopeFired) {
 				ShootHook ();
 			} else {
@@ -56,10 +58,82 @@ public class PlayerController : MonoBehaviour {
 			Jump ();
 		}
 
+		if (Input.GetKey (KeyCode.W)) {
+			ClimbUpRope ();
+		} else if (Input.GetKey (KeyCode.S)) {
+			ClimbDownRope ();
+		}
+
 		if (visualizeRope && isAttachedToRope) {
-			// Line Renderer
-			lineRenderer.SetPosition (0, new Vector3 (transform.position.x, transform.position.y, 0));
-			lineRenderer.SetPosition (1, new Vector3 (hookObject.position.x, hookObject.position.y, 0));
+			VisualizeRope ();
+		} 
+
+	}
+
+	void Jump() {
+		RaycastHit2D hit2d = Physics2D.Raycast (transform.position, Vector2.down, 1f);
+		if (hit2d.collider != null) {
+			isGrounded = true;
+		} else {
+			isGrounded = false;
+		}
+
+		if (isGrounded) {
+			rb2d.AddForce (Vector2.up * jumpForce, ForceMode2D.Impulse);
+		} else {
+			
+		}
+	}
+
+	void Aim() {
+		Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+		mousePosition.z = 0;
+		Debug.DrawRay(transform.position, mousePosition - transform.position);
+	}
+
+	void ShootHook() {
+		Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+		mousePosition.z = 0;
+		RaycastHit2D hit2d = Physics2D.Raycast (transform.position, mousePosition - transform.position, 10f);
+		if (hit2d.collider != null) {
+			GameObject obj = Instantiate (hookPrefab, transform.position, Quaternion.identity);
+			HookBehavior hookBehavior = obj.AddComponent<HookBehavior> ();
+			hookBehavior.Init (transform, hit2d.collider.transform, projectileSpeed);
+			isRopeFired = true;
+			hookObject = obj.transform;
+			Invoke ("CalculateJoints", GetJourneyLength (Vector3.Distance(transform.position, hit2d.transform.position), projectileSpeed));
+			Invoke ("AttachPlayerToRope", GetJourneyLength (Vector3.Distance(transform.position, hit2d.transform.position), projectileSpeed));
+		}
+	}
+
+	void ClimbUpRope() {
+		if (isAttachedToRope) {
+			if (Vector3.Distance (transform.position, joints [joints.Count - 1].transform.position) <= distanceToSnap) {
+				if (joints.Count > 1) {
+					Destroy (joints [joints.Count - 1]);
+					joints.RemoveAt (joints.Count - 1);
+					AttachPlayerToRope ();
+				}
+			} else {
+				transform.position = Vector3.Lerp (transform.position, joints [joints.Count - 1].transform.position, climbSpeed);
+			}
+		}
+	}
+
+	void ClimbDownRope() {
+		if (isAttachedToRope) {
+			if (Vector3.Distance (joints [joints.Count - 1].transform.position, transform.position) >= distanceToSnap) {
+				Debug.Log ("Joint below me, climbing down");
+				transform.position = Vector3.Lerp (transform.position, joints [joints.Count - 1].transform.position, climbSpeed);
+			} else {
+				Debug.Log ("Adding new joint on me");
+				Vector3 spawnPosition = new Vector3 (joints [joints.Count - 1].transform.position.x, joints [joints.Count - 1].transform.position.y - 1f, joints [joints.Count - 1].transform.position.z);
+				GameObject obj = Instantiate (jointPrefab, spawnPosition, Quaternion.identity);
+				obj.transform.parent = joints [joints.Count - 1].transform;
+				joints[joints.Count - 1].GetComponent<HingeJoint2D>().connectedBody = obj.GetComponent<Rigidbody2D>();
+				joints.Add (obj);
+				AttachPlayerToRope ();
+			}
 		}
 	}
 
@@ -104,46 +178,14 @@ public class PlayerController : MonoBehaviour {
 			lineRenderer.SetPosition (1, Vector3.zero);
 		}
 	}
-
-	void Aim() {
-		Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-		mousePosition.z = 0;
-		Debug.DrawRay(transform.position, mousePosition - transform.position);
-	}
-
-	void ShootHook() {
-		Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-		mousePosition.z = 0;
-		RaycastHit2D hit2d = Physics2D.Raycast (transform.position, mousePosition - transform.position, 10f);
-		if (hit2d.collider != null) {
-			GameObject obj = Instantiate (hookPrefab, transform.position, Quaternion.identity);
-			HookBehavior hookBehavior = obj.AddComponent<HookBehavior> ();
-			hookBehavior.Init (transform, hit2d.collider.transform, projectileSpeed);
-			isRopeFired = true;
-			hookObject = obj.transform;
-			Invoke ("CalculateJoints", GetJourneyLength (Vector3.Distance(transform.position, hit2d.transform.position), projectileSpeed));
-			Invoke ("AttachPlayerToRope", GetJourneyLength (Vector3.Distance(transform.position, hit2d.transform.position), projectileSpeed));
-		}
-	}
+		
 
 	float GetJourneyLength(float distance, int speed) {
-		Debug.Log (distance / speed);
 		return distance / speed;
 	}
 
-	void Jump() {
-		RaycastHit2D hit2d = Physics2D.Raycast (transform.position, Vector2.down, 1f);
-		if (hit2d.collider != null) {
-			isGrounded = true;
-		} else {
-			isGrounded = false;
-		}
-
-		if (isGrounded) {
-			Debug.Log ("Let's jump");
-			rb2d.AddForce (Vector2.up * jumpForce, ForceMode2D.Impulse);
-		} else {
-			Debug.Log ("Can't jump");
-		}
+	void VisualizeRope() {
+		lineRenderer.SetPosition (0, transform.position);
+		lineRenderer.SetPosition (1, hookObject.transform.position);
 	}
 }
